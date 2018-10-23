@@ -2,6 +2,7 @@
 Automate VPN Connect to 2 networks with otp tokens.
 Solution is temporary.
 I used https://zxing.org/w/decode.jspx for decoding of my QR code (nice works with photo of QR code).
+You should add  `name_of_file.txt` to option `auth-user-pass` of your .ovpn config for connection.
 
 Config.py format
 
