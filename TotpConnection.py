@@ -42,7 +42,40 @@ def wait_vpn_connection(utun):
     return True
 
 
+def kill_zombie_process(ovpn_filename):
+    try:
+        pids = subprocess.check_output(['pgrep', 'openvpn'])
+        pids_list = [pid for pid in pids.decode().split('\n') if pid != '']
+        for pid in pids_list:
+            ps_info = subprocess.check_output(['ps', '-p', pid])
+            ps_info_list = ps_info.decode().split('\n')
+            for process_info in ps_info_list:
+                if ovpn_filename in process_info:
+                    subprocess.check_call(['sudo', 'kill', pid])
+                    print(f'{pid} has been successfully removed')
+    except subprocess.CalledProcessError:
+        print("can't kill zombie process")
+        return False
+    return True
+
+
+def disconnect_zombie_vpn(utun1, utun2, internal_ovpn_file):
+    try:
+        subprocess.check_call(['ifconfig', utun1])
+    except subprocess.CalledProcessError:
+        try:
+            subprocess.check_call(['ifconfig', utun2])
+            kill_zombie_process(internal_ovpn_file)
+        except subprocess.CalledProcessError:
+            return False
+    return True
+
+
 if __name__ == '__main__':
+
+    disconnect_zombie_vpn(Config.ExternalConnection.UTUN,
+                          Config.InternalConnection.UTUN,
+                          Config.InternalConnection.OVPN_FILE)
 
     connect(Config.ExternalConnection.STR_QR_CODE,
             Config.ExternalConnection.PASSWORD,
@@ -57,5 +90,4 @@ if __name__ == '__main__':
             Config.InternalConnection.USERNAME,
             Config.InternalConnection.OVPN_FILE,
             Config.InternalConnection.UTUN)
-
 
